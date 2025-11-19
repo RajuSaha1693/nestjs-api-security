@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import * as fs from 'fs';
 import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
+
 async function bootstrap() {
   //HTTPS Options
   const httpsOptions = {
@@ -10,6 +12,13 @@ async function bootstrap() {
     cert: fs.readFileSync('./certs/cert.pem'),
   };
   const app = await NestFactory.create(AppModule, { httpsOptions });
+
+  //CORS Configuration
+  app.enableCors({ origin: true, credentials: true });
+
+  //Cookie Parser Middleware
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.use(cookieParser());
 
   //Middleware Configurations
   app.use(helmet());
@@ -25,4 +34,7 @@ async function bootstrap() {
   );
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Bootstrap failed:', err);
+  process.exit(1);
+});
