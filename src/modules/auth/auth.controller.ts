@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Res, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, Res, HttpCode, Req, UnauthorizedException } from '@nestjs/common';
 import { AuthService, UserPayload } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -26,5 +26,29 @@ export class AuthController {
     });
 
     return { access_token };
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  async refresh(@Req() req: Request) {
+    const cookies = req.cookies as Record<string, string>;
+    const refreshToken = cookies.refresh_token;
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
+    const { access_token } = await this.auth.refresh(refreshToken);
+    return { access_token };
+  }
+
+  @Post('logout')
+  @HttpCode(200)
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: false, // true in production
+      sameSite: 'lax',
+    });
+    return { message: 'Logged out successfully' };
   }
 }

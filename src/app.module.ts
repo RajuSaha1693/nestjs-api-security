@@ -9,7 +9,7 @@ import configuration from './config/configuration';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration],
+      load: [configuration], //load the configuration file from the config folder
     }),
     UsersModule,
     AuthModule,
